@@ -1,5 +1,7 @@
 import pytest
+
 from tasks import validate_positive
+
 
 @validate_positive
 def multiply(a, b):
