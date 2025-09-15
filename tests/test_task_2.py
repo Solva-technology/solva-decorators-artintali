@@ -1,5 +1,6 @@
 from tasks import simple_cache
 
+
 def test_simple_cache(capsys):
     call_count = {"count": 0}
 
