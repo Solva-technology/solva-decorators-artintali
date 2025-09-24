@@ -1,24 +1,35 @@
-# ЗАДАНИЕ 2: Кэширование результатов
-# Напиши декоратор simple_cache, который:
-# - запоминает результат функции при вызове с конкретными аргументами,
-# - при повторном вызове с теми же аргументами — возвращает сохранённый
-# результат без повторного вычисления,
-# - печатает "Из кэша" при использовании кэшированного значения.
-# Подсказка: используй словарь для хранения результатов.
-
 from functools import wraps
+from collections import OrderedDict
 
 
-def simple_cache(func):
-    cache = {}
+def simple_cache(func=None, *, maxsize=128):
+    def make_hashable(obj):
+        if isinstance(obj, dict):
+            return tuple(sorted((k, make_hashable(v)) for k, v in obj.items()))
+        elif isinstance(obj, (list, set)):
+            return tuple(make_hashable(v) for v in obj)
+        elif isinstance(obj, tuple):
+            return tuple(make_hashable(v) for v in obj)
+        return obj
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        key = (args, tuple(sorted(kwargs.items())))
-        if key in cache:
-            print("Из кэша")
-            return cache[key]
-        result = func(*args, **kwargs)
-        cache[key] = result
-        return result
-    return wrapper
+    def decorator(f):
+        cache = OrderedDict()
+
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            key = (make_hashable(args), make_hashable(kwargs))
+            if key in cache:
+                print("Из кэша")
+                return cache[key]
+
+            result = f(*args, **kwargs)
+            cache[key] = result
+            if len(cache) > maxsize:
+                cache.popitem(last=False)
+            return result
+
+        return wrapper
+    if func is not None and callable(func):
+        return decorator(func)
+
+    return decorator
