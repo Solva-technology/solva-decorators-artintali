@@ -1,5 +1,5 @@
-from functools import wraps
 from collections import OrderedDict
+from functools import wraps
 
 
 def simple_cache(func=None, *, maxsize=128):
